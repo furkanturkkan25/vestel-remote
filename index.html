@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vestel Kumanda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #c8d4c0;
+      --bg1: #8fa89a;
+      --ink: #1a221c;
+      --shell: #2a312c;
+      --shell-edge: #3a433c;
+      --key: #3d4740;
+      --key-press: #4e5a52;
+      --text: #e8efe6;
+      --muted: #9aab9e;
+      --accent: #d4a017;
+      --ok: #6fbf8a;
+      --bad: #d96b5c;
+      --glow: rgba(212, 160, 23, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: Outfit, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(255,255,255,0.35), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 90% 80%, rgba(80,110,90,0.35), transparent 50%),
+        linear-gradient(160deg, var(--bg0), var(--bg1));
+      display: grid;
+      place-items: center;
+      padding: 24px 16px 40px;
+    }
+
+    .stage {
+      width: min(100%, 380px);
+      animation: rise 0.55s ease-out both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 18px;
+      color: var(--ink);
+    }
+
+    header h1 {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.6rem, 5vw, 2rem);
+      letter-spacing: -0.03em;
+      margin: 0 0 6px;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 0.95rem;
+      opacity: 0.75;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      box-shadow: 0 0 0 0 transparent;
+      transition: background 0.25s, box-shadow 0.25s;
+    }
+
+    .dot.ok {
+      background: var(--ok);
+      box-shadow: 0 0 0 4px rgba(111, 191, 138, 0.25);
+    }
+
+    .dot.bad {
+      background: var(--bad);
+      box-shadow: 0 0 0 4px rgba(217, 107, 92, 0.2);
+    }
+
+    .remote {
+      background:
+        linear-gradient(180deg, #343c36 0%, var(--shell) 40%, #222822 100%);
+      border: 1px solid var(--shell-edge);
+      border-radius: 36px;
+      padding: 22px 20px 26px;
+      box-shadow:
+        0 28px 50px rgba(30, 40, 32, 0.35),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .remote::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -18deg,
+        transparent,
+        transparent 3px,
+        rgba(255,255,255,0.012) 3px,
+        rgba(255,255,255,0.012) 4px
+      );
+      pointer-events: none;
+    }
+
+    .row {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .row.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .row.d-pad {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-areas:
+        ". up ."
+        "left ok right"
+        ". down .";
+      max-width: 240px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    button.key {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #4a544c, var(--key));
+      color: var(--text);
+      font: 600 0.92rem Outfit, sans-serif;
+      min-height: 48px;
+      cursor: pointer;
+      box-shadow:
+        0 2px 0 #1b211d,
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: transform 0.08s ease, background 0.15s, filter 0.15s;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    button.key:hover { filter: brightness(1.08); }
+    button.key:active,
+    button.key.pressed {
+      transform: translateY(2px);
+      background: var(--key-press);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.35);
+    }
+
+    button.key.power {
+      background: linear-gradient(180deg, #6a3a34, #4c2622);
+      color: #ffd4cc;
+    }
+
+    button.key.accent {
+      background: linear-gradient(180deg, #c9a03a, var(--accent));
+      color: #1a1608;
+      box-shadow: 0 2px 0 #7a5d12, 0 0 18px var(--glow);
+    }
+
+    button.key.ok-btn {
+      border-radius: 50%;
+      aspect-ratio: 1;
+      background: linear-gradient(160deg, #7dcaa0, #3f8f62);
+      color: #0f2418;
+      font-weight: 700;
+      box-shadow: 0 2px 0 #24553a, 0 0 20px rgba(111, 191, 138, 0.3);
+    }
+
+    button.key.color-red { background: linear-gradient(180deg, #c45a4e, #8f342c); }
+    button.key.color-green { background: linear-gradient(180deg, #4ea86a, #2d6b42); }
+    button.key.color-yellow { background: linear-gradient(180deg, #d4b84a, #9a7d1e); color: #1a1608; }
+    button.key.color-blue { background: linear-gradient(180deg, #4f7eb8, #2d4f7a); }
+
+    .up { grid-area: up; }
+    .down { grid-area: down; }
+    .left { grid-area: left; }
+    .right { grid-area: right; }
+    .ok { grid-area: ok; }
+
+    .label {
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: center;
+      margin: 4px 0 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(26, 34, 28, 0.92);
+      color: #e8efe6;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .hint {
+      margin-top: 14px;
+      text-align: center;
+      color: var(--ink);
+      font-size: 0.8rem;
+      opacity: 0.65;
+    }
+
+    kbd {
+      font-family: Outfit, sans-serif;
+      background: rgba(26, 34, 28, 0.12);
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <header>
+      <h1>Vestel</h1>
+      <p>43F9530 ağ kumandası</p>
+      <div class="status">
+        <span class="dot" id="dot"></span>
+        <span id="statusText">Bağlantı kontrol ediliyor…</span>
+      </div>
+    </header>
+
+    <div class="remote" id="remote">
+      <div class="row cols-3">
+        <button class="key power" data-key="power">Güç</button>
+        <button class="key" data-key="source">Kaynak</button>
+        <button class="key" data-key="mute">Sessiz</button>
+      </div>
+
+      <div class="label">Ses / Kanal</div>
+      <div class="row cols-4">
+        <button class="key" data-key="vol_down">Vol −</button>
+        <button class="key" data-key="vol_up">Vol +</button>
+        <button class="key" data-key="ch_down">Ch −</button>
+        <button class="key" data-key="ch_up">Ch +</button>
+      </div>
+
+      <div class="label">Yön</div>
+      <div class="row d-pad">
+        <button class="key up" data-key="up">▲</button>
+        <button class="key left" data-key="left">◀</button>
+        <button class="key ok-btn ok" data-key="ok">OK</button>
+        <button class="key right" data-key="right">▶</button>
+        <button class="key down" data-key="down">▼</button>
+      </div>
+
+      <div class="row cols-3">
+        <button class="key" data-key="back">Geri</button>
+        <button class="key accent" data-key="menu">Menü</button>
+        <button class="key" data-key="exit">Çıkış</button>
+      </div>
+
+      <div class="row cols-3">
+        <button class="key" data-key="internet">Smart</button>
+        <button class="key" data-key="netflix">Netflix</button>
+        <button class="key" data-key="youtube">YouTube</button>
+      </div>
+
+      <div class="label">Sayılar</div>
+      <div class="row cols-3">
+        <button class="key" data-key="1">1</button>
+        <button class="key" data-key="2">2</button>
+        <button class="key" data-key="3">3</button>
+        <button class="key" data-key="4">4</button>
+        <button class="key" data-key="5">5</button>
+        <button class="key" data-key="6">6</button>
+        <button class="key" data-key="7">7</button>
+        <button class="key" data-key="8">8</button>
+        <button class="key" data-key="9">9</button>
+        <button class="key" data-key="info">Info</button>
+        <button class="key" data-key="0">0</button>
+        <button class="key" data-key="epg">EPG</button>
+      </div>
+
+      <div class="row cols-4">
+        <button class="key color-red" data-key="red">R</button>
+        <button class="key color-green" data-key="green">G</button>
+        <button class="key color-yellow" data-key="yellow">Y</button>
+        <button class="key color-blue" data-key="blue">B</button>
+      </div>
+    </div>
+
+    <p class="hint">Klavye: ok tuşları, <kbd>Enter</kbd>, <kbd>+/−</kbd>, <kbd>M</kbd> menü, <kbd>Backspace</kbd> geri</p>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const toastEl = document.getElementById("toast");
+    const statusText = document.getElementById("statusText");
+    const dot = document.getElementById("dot");
+    let toastTimer;
+
+    function toast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1600);
+    }
+
+    async function checkStatus() {
+      try {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+        if (data.ok) {
+          dot.className = "dot ok";
+          statusText.textContent = `Bağlı · ${data.ip}`;
+        } else {
+          dot.className = "dot bad";
+          statusText.textContent = "TV şu an erişilemiyor";
+        }
+      } catch {
+        dot.className = "dot bad";
+        statusText.textContent = "Sunucu yanıt vermiyor";
+      }
+    }
+
+    async function press(key) {
+      const btn = document.querySelector(`[data-key="${key}"]`);
+      if (btn) {
+        btn.classList.add("pressed");
+        setTimeout(() => btn.classList.remove("pressed"), 120);
+      }
+      try {
+        const res = await fetch("/api/key", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key }),
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          toast(data.error || "Komut gönderilemedi");
+          checkStatus();
+        }
+      } catch {
+        toast("Bağlantı hatası");
+      }
+    }
+
+    document.getElementById("remote").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-key]");
+      if (btn) press(btn.dataset.key);
+    });
+
+    const keymap = {
+      ArrowUp: "up",
+      ArrowDown: "down",
+      ArrowLeft: "left",
+      ArrowRight: "right",
+      Enter: "ok",
+      Backspace: "back",
+      Escape: "exit",
+      m: "menu",
+      M: "menu",
+      "+": "vol_up",
+      "=": "vol_up",
+      "-": "vol_down",
+      _: "vol_down",
+      p: "power",
+      P: "power",
+    };
+
+    for (let i = 0; i <= 9; i++) keymap[String(i)] = String(i);
+
+    window.addEventListener("keydown", (e) => {
+      if (e.target.matches("input, textarea")) return;
+      const key = keymap[e.key];
+      if (!key) return;
+      e.preventDefault();
+      press(key);
+    });
+
+    checkStatus();
+    setInterval(checkStatus, 8000);
+  </script>
+</body>
+</html>
